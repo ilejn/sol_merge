@@ -28,6 +28,7 @@ usage = """
 """
 
 known_files = {}
+import_remappings = []
 
 def run(fname):
     if fname not in known_files:
@@ -41,6 +42,8 @@ def run(fname):
             for line in f:
                 if line.lstrip().startswith("import"):
                     file_to_import = line.replace("\t", " ").split()[-1]
+                    for remap in import_remappings:
+                        file_to_import = file_to_import.replace(remap[0], remap[1])
                     for to_replace in "'\";\n":
                         file_to_import = file_to_import.replace(to_replace,"")
                     run(file_to_import)
@@ -55,7 +58,13 @@ def main():
     parser = OptionParser(usage=usage)
     parser.add_option("-f", "--file", "--filename", "--source", dest="fname",
                       help="File to start from")
+    parser.add_option("--import-remappings", dest="import_remappings", default="",
+                      help="path_in_source1=path_in_file_system1 path_in_source2=path_in_file_system2")
     (options, args) = parser.parse_args()
+    if options.import_remappings:
+        import_remappings_arr = options.import_remappings.replace(",", " ").split()
+        for el in import_remappings_arr:
+            import_remappings.append(el.split('='))
     run(options.fname)
 
 if __name__ == "__main__":
